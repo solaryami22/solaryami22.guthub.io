@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Tienda</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar / Header -->
+<header class="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-700 p-2.5 rounded-xl shadow-inner">
+                <i class="fa-solid fa-store text-xl text-indigo-200"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">Mi Tienda</h1>
+                <p class="text-xs text-indigo-200">Sistema de Inventario y Ventas</p>
+            </div>
+        </div>
+        <!-- Navigation Buttons -->
+        <nav class="flex bg-indigo-700/60 p-1.5 rounded-xl gap-2 backdrop-blur-sm border border-indigo-500/30">
+            <button onclick="switchTab('vender')" id="btn-vender" class="px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-2 bg-white text-indigo-600 shadow-sm">
+                <i class="fa-solid fa-cash-register"></i>
+                <span>Vender (POS)</span>
+            </button>
+            <button onclick="switchTab('inventario')" id="btn-inventario" class="px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-2 text-indigo-100 hover:text-white hover:bg-indigo-600/50">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <span>Añadir Productos</span>
+            </button>
+            <button onclick="switchTab('historial')" id="btn-historial" class="px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-2 text-indigo-100 hover:text-white hover:bg-indigo-600/50">
+                <i class="fa-solid fa-receipt"></i>
+                <span>Ventas Realizadas</span>
+            </button>
+        </nav>
+    </div>
+</header>
+
+<!-- Main Content Area -->
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+    
+    <!-- ==================== VENDER TAB ==================== -->
+    <section id="tab-vender" class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Products catalog for sale -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-basket-shopping text-indigo-600"></i> Catálogo de Productos
+                    </h2>
+                    <div class="relative w-full sm:w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-search"></i>
+                        </span>
+                        <input type="text" id="search-product" onkeyup="renderPOSCatalog()" placeholder="Buscar producto..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div id="pos-catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <!-- Dynamic items injected here -->
+                </div>
+            </div>
+
+            <!-- Shopping Cart / Checkout Panel -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between h-[600px] sticky top-24">
+                <div>
+                    <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+                        <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                            <i class="fa-solid fa-cart-shopping text-indigo-600"></i> Carrito de Venta
+                        </h2>
+                        <button onclick="clearCart()" class="text-xs text-rose-500 hover:text-rose-700 font-medium">Vaciar</button>
+                    </div>
+
+                    <!-- Cart Items List -->
+                    <div id="cart-items-container" class="divide-y divide-slate-100 overflow-y-auto max-h-[350px] my-3 pr-1">
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fa-solid fa-cart-arrow-down text-3xl mb-2"></i>
+                            <p class="text-sm">El carrito está vacío</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cart Summary & Checkout -->
+                <div class="pt-4 border-t border-slate-100 space-y-3">
+                    <div class="flex justify-between items-center text-slate-500 text-sm">
+                        <span>Subtotal</span>
+                        <span id="cart-subtotal">Bs. 0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-lg font-bold text-slate-800">
+                        <span>Total a Pagar</span>
+                        <span id="cart-total" class="text-indigo-600">Bs. 0.00</span>
+                    </div>
+                    <button onclick="checkout()" id="btn-checkout" disabled class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3 rounded-xl transition shadow-lg shadow-indigo-100 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i> Completar Venta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== INVENTARIO TAB ==================== -->
+    <section id="tab-inventario" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Add Product Form -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-fit">
+                <h2 id="form-title" class="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-plus text-indigo-600"></i> Añadir Nuevo Producto
+                </h2>
+                <form id="product-form" onsubmit="handleProductSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="product-id">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nombre del Producto</label>
+                        <input type="text" id="prod-name" required placeholder="Ej. Arroz 1kg" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Cantidad en Stock</label>
+                        <input type="number" id="prod-stock" min="0" required placeholder="Ej. 50" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Precio Unitario (Bs.)</label>
+                        <input type="number" step="0.01" min="0" id="prod-price" required placeholder="Ej. 10.50" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" id="submit-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition shadow-md shadow-indigo-100 text-sm">Guardar Producto</button>
+                        <button type="button" id="cancel-edit-btn" onclick="resetProductForm()" class="hidden px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-xl transition text-sm">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Product Inventory Table -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-warehouse text-indigo-600"></i> Inventario Actual
+                    </h2>
+                    <div class="relative w-full sm:w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-search"></i>
+                        </span>
+                        <input type="text" id="search-inventory" onkeyup="renderInventoryTable()" placeholder="Buscar en inventario..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-100">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
+                                <th class="p-3.5">Nombre</th>
+                                <th class="p-3.5 text-center">Stock</th>
+                                <th class="p-3.5 text-right">Precio</th>
+                                <th class="p-3.5 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Dynamic items injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== HISTORIAL TAB ==================== -->
+    <section id="tab-historial" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Historial de Ventas
+                </h2>
+                <button onclick="clearHistory()" class="text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 font-medium px-3 py-2 rounded-lg transition">Limpiar Historial</button>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-100">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
+                            <th class="p-3.5">ID Venta / Fecha</th>
+                            <th class="p-3.5">Productos Vendidos</th>
+                            <th class="p-3.5 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-history-body" class="divide-y divide-slate-100 text-sm">
+                        <!-- Dynamic items injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Custom Modal Notification -->
+<div id="notification-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center space-y-4">
+        <div id="modal-icon" class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-xl">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <h3 id="modal-title" class="text-lg font-bold text-slate-800">¡Éxito!</h3>
+        <p id="modal-message" class="text-sm text-slate-500">Operación realizada correctamente.</p>
+        <button onclick="closeModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-sm">Entendido</button>
+    </div>
+</div>
+
+<!-- JavaScript Application Logic -->
+<script>
+    // State Management
+    let products = JSON.parse(localStorage.getItem('mi_tienda_products')) || [
+        
+    ];
+
+    let cart = [];
+    let salesHistory = JSON.parse(localStorage.getItem('mi_tienda_sales')) || [];
+
+    // Save to localStorage
+    function saveData() {
+        localStorage.setItem('mi_tienda_products', JSON.stringify(products));
+        localStorage.setItem('mi_tienda_sales', JSON.stringify(salesHistory));
+    }
+
+    // UI Navigation Tabs
+    function switchTab(tabName) {
+        const tabs = ['vender', 'inventario', 'historial'];
+        tabs.forEach(t => {
+            document.getElementById(`tab-${t}`).classList.add('hidden');
+            document.getElementById(`btn-${t}`).className = "px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-2 text-indigo-100 hover:text-white hover:bg-indigo-600/50";
+        });
+
+        document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+        document.getElementById(`btn-${tabName}`).className = "px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-2 bg-white text-indigo-600 shadow-sm";
+
+        if (tabName === 'vender') renderPOSCatalog();
+        if (tabName === 'inventario') renderInventoryTable();
+        if (tabName === 'historial') renderSalesHistory();
+    }
+
+    // Custom Modal Alert Box
+    function showModal(title, message, isError = false) {
+        const modal = document.getElementById('notification-modal');
+        const icon = document.getElementById('modal-icon');
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-message').innerText = message;
+
+        if (isError) {
+            icon.className = "w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-xl";
+            icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        } else {
+            icon.className = "w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-xl";
+            icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('notification-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    // ==================== INVENTARIO LOGIC ====================
+    function handleProductSubmit(event) {
+        event.preventDefault();
+        const id = document.getElementById('product-id').value;
+        const name = document.getElementById('prod-name').value.trim();
+        const stock = parseInt(document.getElementById('prod-stock').value);
+        const price = parseFloat(document.getElementById('prod-price').value);
+
+        if (id) {
+            const product = products.find(p => p.id === id);
+            if (product) {
+                product.name = name;
+                product.stock = stock;
+                product.price = price;
+                showModal('¡Actualizado!', 'El producto se ha modificado correctamente.');
+            }
+        } else {
+            const newProduct = {
+                id: Date.now().toString(),
+                name,
+                stock,
+                price
+            };
+            products.push(newProduct);
+            showModal('¡Guardado!', 'El producto se ha añadido al inventario.');
+        }
+
+        saveData();
+        resetProductForm();
+        renderInventoryTable();
+    }
+
+    function renderInventoryTable() {
+        const tbody = document.getElementById('inventory-table-body');
+        const search = document.getElementById('search-inventory').value.toLowerCase();
+        const filtered = products.filter(p => p.name.toLowerCase().includes(search));
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">No hay productos registrados</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(p => `
+            <tr class="hover:bg-slate-50/80 transition">
+                <td class="p-3.5 font-medium text-slate-700">${escapeHtml(p.name)}</td>
+                <td class="p-3.5 text-center">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${p.stock > 5 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
+                        ${p.stock} un.
+                    </span>
+                </td>
+                <td class="p-3.5 text-right font-medium text-slate-600">Bs. ${p.price.toFixed(2)}</td>
+                <td class="p-3.5 text-center space-x-2">
+                    <button onclick="editProduct('${p.id}')" class="text-indigo-500 hover:text-indigo-700 p-1.5 transition" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button onclick="deleteProduct('${p.id}')" class="text-rose-500 hover:text-rose-700 p-1.5 transition" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function editProduct(id) {
+        const product = products.find(p => p.id === id);
+        if (!product) return;
+
+        document.getElementById('product-id').value = product.id;
+        document.getElementById('prod-name').value = product.name;
+        document.getElementById('prod-stock').value = product.stock;
+        document.getElementById('prod-price').value = product.price;
+
+        document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-600"></i> Editar Producto';
+        document.getElementById('submit-btn').innerText = 'Actualizar Producto';
+        document.getElementById('cancel-edit-btn').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetProductForm() {
+        document.getElementById('product-form').reset();
+        document.getElementById('product-id').value = '';
+        document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-circle-plus text-indigo-600"></i> Añadir Nuevo Producto';
+        document.getElementById('submit-btn').innerText = 'Guardar Producto';
+        document.getElementById('cancel-edit-btn').classList.add('hidden');
+    }
+
+    function deleteProduct(id) {
+        products = products.filter(p => p.id !== id);
+        cart = cart.filter(item => item.id !== id);
+        saveData();
+        renderInventoryTable();
+        renderPOSCatalog();
+        renderCart();
+        showModal('Eliminado', 'El producto ha sido eliminado del inventario.');
+    }
+
+    // ==================== POS / VENDER LOGIC ====================
+    function renderPOSCatalog() {
+        const grid = document.getElementById('pos-catalog-grid');
+        const search = document.getElementById('search-product').value.toLowerCase();
+        const filtered = products.filter(p => p.name.toLowerCase().includes(search));
+
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-100">No hay productos disponibles</div>`;
+            return;
+        }
+
+        grid.innerHTML = filtered.map(p => `
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition">
+                <div>
+                    <div class="flex justify-between items-start gap-2 mb-2">
+                        <h3 class="font-semibold text-slate-800 text-sm leading-snug">${escapeHtml(p.name)}</h3>
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">Bs. ${p.price.toFixed(2)}</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Stock disponible: <span class="font-medium ${p.stock > 0 ? 'text-slate-600' : 'text-rose-500'}">${p.stock}</span></p>
+                </div>
+                <button onclick="addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''} class="mt-4 w-full bg-slate-100 hover:bg-indigo-600 hover:text-white disabled:bg-slate-100 disabled:text-slate-300 text-slate-700 text-xs font-medium py-2 rounded-xl transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-cart-plus"></i> Añadir
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function addToCart(id) {
+        const product = products.find(p => p.id === id);
+        if (!product || product.stock <= 0) return;
+
+        const cartItem = cart.find(item => item.id === id);
+        if (cartItem) {
+            if (cartItem.quantity < product.stock) {
+                cartItem.quantity++;
+            } else {
+                showModal('Stock insuficiente', 'No hay más unidades disponibles de este producto.', true);
+                return;
+            }
+        } else {
+            cart.push({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                quantity: 1
+            });
+        }
+        renderCart();
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cart-items-container');
+        const subtotalEl = document.getElementById('cart-subtotal');
+        const totalEl = document.getElementById('cart-total');
+        const checkoutBtn = document.getElementById('btn-checkout');
+
+        if (cart.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-12 text-slate-400">
+                    <i class="fa-solid fa-cart-arrow-down text-3xl mb-2"></i>
+                    <p class="text-sm">El carrito está vacío</p>
+                </div>
+            `;
+            subtotalEl.innerText = 'Bs. 0.00';
+            totalEl.innerText = 'Bs. 0.00';
+            checkoutBtn.disabled = true;
+            return;
+        }
+
+        let subtotal = 0;
+        container.innerHTML = cart.map(item => {
+            const itemTotal = item.price * item.quantity;
+            subtotal += itemTotal;
+            return `
+                <div class="py-3 flex justify-between items-center gap-2">
+                    <div class="flex-1">
+                        <h4 class="text-sm font-medium text-slate-700">${escapeHtml(item.name)}</h4>
+                        <p class="text-xs text-slate-400">Bs. ${item.price.toFixed(2)} x ${item.quantity}</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg flex items-center justify-center text-xs transition"><i class="fa-solid fa-minus"></i></button>
+                        <span class="text-sm font-semibold w-5 text-center">${item.quantity}</span>
+                        <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg flex items-center justify-center text-xs transition"><i class="fa-solid fa-plus"></i></button>
+                        <button onclick="removeFromCart('${item.id}')" class="text-rose-400 hover:text-rose-600 p-1 text-xs ml-1"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        subtotalEl.innerText = `Bs. ${subtotal.toFixed(2)}`;
+        totalEl.innerText = `Bs. ${subtotal.toFixed(2)}`;
+        checkoutBtn.disabled = false;
+    }
+
+    function updateCartQty(id, change) {
+        const cartItem = cart.find(item => item.id === id);
+        const product = products.find(p => p.id === id);
+        if (!cartItem || !product) return;
+
+        const newQty = cartItem.quantity + change;
+        if (newQty <= 0) {
+            removeFromCart(id);
+        } else if (newQty > product.stock) {
+            showModal('Stock excedido', 'Has alcanzado el límite de stock disponible.', true);
+        } else {
+            cartItem.quantity = newQty;
+            renderCart();
+        }
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(item => item.id !== id);
+        renderCart();
+    }
+
+    function clearCart() {
+        cart = [];
+        renderCart();
+    }
+
+    function checkout() {
+        if (cart.length === 0) return;
+
+        for (let item of cart) {
+            const product = products.find(p => p.id === item.id);
+            if (!product || product.stock < item.quantity) {
+                showModal('Error en Venta', `Stock insuficiente para ${item.name}`, true);
+                return;
+            }
+        }
+
+        let saleTotal = 0;
+        cart.forEach(item => {
+            const product = products.find(p => p.id === item.id);
+            product.stock -= item.quantity;
+            saleTotal += item.price * item.quantity;
+        });
+
+        const newSale = {
+            id: 'V-' + Math.floor(100000 + Math.random() * 900000),
+            date: new Date().toLocaleString(),
+            items: [...cart],
+            total: saleTotal
+        };
+        salesHistory.unshift(newSale);
+
+        saveData();
+        cart = [];
+        renderCart();
+        renderPOSCatalog();
+        renderInventoryTable();
+        showModal('¡Venta Exitosa!', `La transacción se ha procesado con éxito por un total de Bs. ${saleTotal.toFixed(2)}.`);
+    }
+
+    // ==================== HISTORIAL LOGIC ====================
+    function renderSalesHistory() {
+        const tbody = document.getElementById('sales-history-body');
+
+        if (salesHistory.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-slate-400">No hay ventas registradas aún</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = salesHistory.map(sale => `
+            <tr class="hover:bg-slate-50/80 transition align-top">
+                <td class="p-3.5">
+                    <span class="font-semibold text-slate-700 block">${sale.id}</span>
+                    <span class="text-xs text-slate-400">${sale.date}</span>
+                </td>
+                <td class="p-3.5">
+                    <ul class="space-y-1">
+                        ${sale.items.map(i => `<li class="text-xs text-slate-600"><span class="font-semibold">${i.quantity}x</span> ${escapeHtml(i.name)} (Bs.${i.price.toFixed(2)} c/u)</li>`).join('')}
+                    </ul>
+                </td>
+                <td class="p-3.5 text-right font-semibold text-indigo-600">Bs. ${sale.total.toFixed(2)}</td>
+            </tr>
+        `).join('');
+    }
+
+    function clearHistory() {
+        salesHistory = [];
+        saveData();
+        renderSalesHistory();
+        showModal('Historial Limpiado', 'Se ha borrado el registro de ventas.');
+    }
+
+    // Security utility helper
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // Initial render on load
+    window.onload = function() {
+        renderPOSCatalog();
+    };
+</script>
+</body>
+</html>
